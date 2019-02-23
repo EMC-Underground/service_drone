@@ -10,18 +10,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DRONE_GIT_ALWAYS_AUTH=false      
-      - DRONE_GOGS_SERVER=http://gogs
+      - DRONE_GOGS_SERVER=https://gogs.container.se.lab.emc.com
       - DRONE_RUNNER_CAPACITY=2  
       - DRONE_GOGS_SKIP_VERIFY=true  
-      - DRONE_SERVER_HOST=drone
-      - DRONE_SERVER_PROTO=http  
+      - DRONE_SERVER_HOST=drone.container.se.lab.emc.com
+      - DRONE_SERVER_PROTO=https  
     deploy:  
       labels:
         - "traefik.frontend.rule=Host:drone.container.se.lab.emc.com"
         - "traefik.port=80"
         - "traefik.docker.network=traefik-net"
         - "traefik.enable=true" 
-        - "traefik.frontend.headers.SSLRedirect=true"  
 
 networks:
   traefik-net:
