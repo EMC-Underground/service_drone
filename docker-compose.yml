@@ -1,32 +1,61 @@
 version: '3'
 
 services:
-  drone:
+  drone-server:
     image: drone/drone:1.0.0-rc.5
     networks:
       - traefik-net
+      - default
     volumes:
       - drone:/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - DRONE_GIT_ALWAYS_AUTH=false      
+      - DRONE_GIT_ALWAYS_AUTH=false
       - DRONE_GOGS_SERVER=https://gogs.container.se.lab.emc.com
-      - DRONE_RUNNER_CAPACITY=2  
-      - DRONE_GOGS_SKIP_VERIFY=true  
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_GOGS_SKIP_VERIFY=true
       - DRONE_SERVER_HOST=drone.container.se.lab.emc.com
-      - DRONE_SERVER_PROTO=https  
-    deploy:  
+      - DRONE_SERVER_PROTO=http
+      - DRONE_RUNNER_ENVIRON=PLUGIN_SKIP_VERIFY:true,PLUGIN_INSECURE:true
+      - DRONE_RPC_SECRET=c51eed7076481fadd5953de956fdb2f9
+      - DRONE_DATABASE_DRIVER=postgres
+      - DRONE_DATABASE_DATASOURCE=postgres://postgres:Password#1@postgres:5432/postgres?sslmode=disable
+    deploy:
       labels:
         - "traefik.frontend.rule=Host:drone.container.se.lab.emc.com"
         - "traefik.port=80"
         - "traefik.docker.network=traefik-net"
-        - "traefik.enable=true" 
+        - "traefik.enable=true"
+  drone-worker:
+    image: drone/agent:1.0.0-rc.5
+    networks:
+      - default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_SERVER=http://drone-server
+      - DRONE_RPC_SECRET=c51eed7076481fadd5953de956fdb2f9
+      - DRONE_RUNNER_ENVIRON=PLUGIN_SKIP_VERIFY:true,PLUGIN_INSECURE:true
+    deploy:
+      mode: global
+  postgres:
+    image: postgres
+    networks:
+      - default
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=Password#1
 
 networks:
   traefik-net:
     external: true
 
 volumes:
+  postgres:
+    driver: rexray/scaleio
+    driver_opts:
+      size: 50
   drone:
     driver: rexray/scaleio
     driver_opts:
