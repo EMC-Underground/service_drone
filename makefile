@@ -2,11 +2,11 @@ all: build
 
 
 build:
-	docker stack deploy -c docker-compose.yml drone 
+	docker stack deploy -c drone-compose.yml drone
 
 refresh: destroy build
 
 destroy:
-	docker stack rm drone 
+	docker stack rm drone
 	sleep 2
 
